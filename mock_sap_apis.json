@@ -3,11 +3,11 @@
     "project": "Midea Carrier - Sales Execution Engine (SEE)",
     "s4hana_version": "S/4HANA On-Premise 2023 FPS03",
     "generated_at": "2026-08-28",
-    "purpose": "Mock data for application development - field mapping from current SAP extractions to standard OData APIs"
+    "purpose": "Mock data for application development - field mapping from current SAP extractions to standard OData APIs, plus non-SAP data structures (quotas, logistics, product master)"
   },
 
   "API_SALES_ORDER_SRV": {
-    "description": "Sales Order API - substitui extração manual da Carteira (pedidos de venda)",
+    "description": "Sales Order API - substitui extração manual da Carteira (pedidos de venda). Fonte: CARTEIRA 07.08 - RAC.xlsx, Planilha Caio Fratta.",
     "entity_SalesOrder": {
       "SalesOrder": "0000012345",
       "SalesOrderType": "ZOR",
@@ -44,8 +44,10 @@
       "NetAmount": 96000.00,
       "TaxAmount": 19200.00,
       "FreightAmount": 2880.00,
-      "Incoterms": "CIF",
-      "SalesDocumentRjcnReason": ""
+      "IncotermsClassification": "CIF",
+      "SalesDocumentRjcnReason": "",
+      "BusinessArea": "1000",
+      "ProfitCenter": "PC1001"
     },
     "entity_SalesOrderScheduleLine": {
       "SalesOrder": "0000012345",
@@ -60,7 +62,7 @@
   },
 
   "API_OUTBOUND_DELIVERY_SRV": {
-    "description": "Outbound Delivery API - substitui extração manual de remessas (ZREMESSA / VL03N)",
+    "description": "Outbound Delivery API - substitui extração manual de remessas (ZREMESSA / VL03N / VL10C). Fonte: CARTEIRA 07.08, Emissão - MACRO - RAC.xlsm.",
     "entity_OutbDeliveryHeader": {
       "DeliveryDocument": "0080123456",
       "DeliveryDocumentType": "LF",
@@ -113,11 +115,67 @@
       "ContactPersonFirstName": "",
       "ContactPersonLastName": "",
       "AddressID": "0000123456"
+    },
+    "ZREMESSA_inventory_snapshot": {
+      "description": "Estrutura do extrato ZREMESSA já disponível no Data Lake. Fonte: Emissão - MACRO - RAC.xlsm > sheet ZREMESSA.",
+      "Material": "38MACA09M5",
+      "MaterialDescription": "AR COND SPLIT HW LITE INVERTER 9000BTU",
+      "Plant": "1001",
+      "StorageLocation": "0001",
+      "FreeUseQty": 200.0,
+      "ShipmentToCustomerQty": 80.0,
+      "AvailableForSalesOrdersQty": 120.0,
+      "BlockedQty": 0.0,
+      "BillableQty": 120.0,
+      "ExternalQty": 0.0,
+      "MaterialType": "B235",
+      "TotalQty": 320.0,
+      "OriginType": "Próprio",
+      "OriginName": "Centro Distribuição Itajaí"
+    },
+    "VL10C_pending_deliveries": {
+      "description": "Lista de remessas pendentes (VL10C). Fonte: Emissão - MACRO - RAC.xlsm > sheet VL10C.",
+      "Semaforo": "VERDE",
+      "Origin": "SP01",
+      "Material": "38MACA09M5",
+      "SuppliedQuantity": 80.0,
+      "PendingQuantity": 40.0,
+      "CustomerPurchaseOrderNumber": "PO-CLIENTE-9988",
+      "SalesOrder": "0000012345"
+    }
+  },
+
+  "API_BILLING_SRV": {
+    "description": "Billing/Invoice data - substitui extração manual de faturamento. Fonte: EXPORT_20260807_090339 - Home Applicance.xlsx.",
+    "entity_BillingDocument": {
+      "BillingDocument": "9000088771",
+      "BillingDocumentType": "ZF2",
+      "BillingDocumentCategory": "M",
+      "BillingDocumentDate": "2026-08-07",
+      "CreationDate": "2026-08-07",
+      "CreationTime": "09:03:39",
+      "BillingDocumentItem": "000010",
+      "ReferenceDocument": "0000012345",
+      "SalesDocument": "0000012345",
+      "SalesDocumentItem": "000010",
+      "BilledQuantity": 80.0,
+      "BillingQuantityUnit": "UN",
+      "Material": "38MACA09M5",
+      "Plant": "1001",
+      "SoldToParty": "0000100023",
+      "NetAmount": 96000.00,
+      "TaxAmount": 19200.00,
+      "TransactionCurrency": "BRL",
+      "SalesOffice": "SP01",
+      "SalesGroup": "G01",
+      "InvoiceNumber": "NF-000123456",
+      "Region": "SP",
+      "Division": "HA"
     }
   },
 
   "BAPI_OUTB_DELIVERY_CREATE_SLS": {
-    "description": "BAPI para criação de remessa a partir de pedido de venda - base do RFC ABAP custom a ser construído",
+    "description": "BAPI para criação de remessa a partir de pedido de venda - base do RFC ABAP custom a ser construído.",
     "input": {
       "SHIP_POINT": "SP01",
       "DU_DATE": "2026-08-15",
@@ -145,7 +203,7 @@
   },
 
   "BAPI_MATERIAL_AVAILABILITY": {
-    "description": "ATP clássico - verificação de disponibilidade de material (Default Release)",
+    "description": "ATP clássico - verificação de disponibilidade de material (Default Release).",
     "input": {
       "PLANT": "1001",
       "MATERIAL": "38MACA09M5",
@@ -169,7 +227,7 @@
   },
 
   "OP_APIAVAILTOPROMISECHECK_0001": {
-    "description": "Advanced ATP (AATP) - verificação avançada de disponibilidade, suporta backorder e alternativas",
+    "description": "Advanced ATP (AATP) - verificação avançada de disponibilidade, suporta backorder e alternativas.",
     "request": {
       "ATPCheckRequest": {
         "ATPCheckRequestItem": [
@@ -208,59 +266,264 @@
     }
   },
 
+  "non_sap_data_structures": {
+    "description": "Estruturas de dados que não têm API SAP padrão. Devem ser mantidas em Supabase/tabelas de configuração da aplicação ou ingeridas manualmente no Data Lake.",
+
+    "product_master": {
+      "description": "Master data de produto/SKU com categorias, divisões e dimensões físicas. Fonte: ZPP044N_ZSKU, Simulador_Vendas, Dim.Prod.",
+      "example": {
+        "Material": "38MACA09M5",
+        "SKUDescriptionPT": "AR COND SPLIT HW LITE INVERTER 9000BTU",
+        "SKUDescriptionEN": "SPLIT AC HW LITE INVERTER 9000BTU",
+        "ProductDivision": "RAC",
+        "ProductCategory": "SPLIT",
+        "CommercialDescription": "HW LITE INVERTER 9K",
+        "ProductFamily": "HW LITE",
+        "Capacity": "9000BTU",
+        "Brand": "Midea",
+        "VolumeM3": 0.231,
+        "VolumeContainerM3": 0.245,
+        "GrossWeightKG": 15.6,
+        "NetWeightKG": 13.2,
+        "WeightUnit": "KG",
+        "ValidFrom": "2026-04-01",
+        "ValidTo": "9999-12-31"
+      }
+    },
+
+    "bom_evap_cond_grelha": {
+      "description": "Estrutura BOM para linking EVAP/COND/GRELHA via campo FATCOM. Fonte: ZPP044N_ZSKU_20260812.",
+      "example": {
+        "ParentMaterial": "38MACA09M5",
+        "BOMExplosionLevel": 1,
+        "ComponentNumber": "38MCO09M5",
+        "ComponentDescriptionPT": "CONDENSADORA SPLIT HW LITE 9000BTU",
+        "ComponentDescriptionEN": "CONDENSER SPLIT HW LITE 9000BTU",
+        "ComponentQty": 1.0,
+        "ComponentUOM": "UN",
+        "ComponentType": "COND",
+        "LinkedGrelha": "38MGR09M5",
+        "FATCOM": "FAM-HW09-001",
+        "ValidFrom": "2026-04-01",
+        "ValidTo": "9999-12-31",
+        "BOMDocument": "00000123456"
+      }
+    },
+
+    "customer_master": {
+      "description": "Master data de cliente com hierarquia comercial e dados geográficos. Fonte: Simulador_Vendas, Clientes Ajustado.",
+      "example": {
+        "CustomerID": "0000100023",
+        "TaxID_CNPJ": "12.345.678/0001-99",
+        "LegalName": "MAGAZINE LUIZA S.A.",
+        "City": "Franca",
+        "State": "SP",
+        "Region": "Sudeste",
+        "CustomerNetwork": "Magalu",
+        "MagaluMesh": true,
+        "QuotaCustomerGroup": "NAC-MAGALU",
+        "HAManager": "João Silva",
+        "HACoordinator": "Maria Souza",
+        "SDAManager": "Carlos Lima",
+        "SDACoordinator": "Ana Costa",
+        "PriorityRoute": "VIA-SP",
+        "CustomerProfile": "NACIONAL"
+      }
+    },
+
+    "quota_management": {
+      "description": "Gestão de cotas por canal/cliente/produto. Sem API SAP padrão — manter em Supabase. Fonte: Planilha Debora - Cota RAC, Planilha Caio Fratta.",
+      "quota_header": {
+        "QuotaID": "QUOTA-2026-08-RAC",
+        "Period": "2026-08",
+        "ProductDivision": "RAC",
+        "Channel": "Nacional",
+        "TotalQuota": 5000.0,
+        "Unit": "UN"
+      },
+      "quota_by_channel": [
+        { "Channel": "National Retail",  "ForecastFPA": 1500.0, "Quota": 1200.0, "Billed": 800.0,  "Listed": 200.0, "Intercompany": 0.0,   "QuotaBalance": 200.0 },
+        { "Channel": "Regional Retail",  "ForecastFPA": 800.0,  "Quota": 700.0,  "Billed": 400.0,  "Listed": 100.0, "Intercompany": 0.0,   "QuotaBalance": 200.0 },
+        { "Channel": "E-Commerce",       "ForecastFPA": 600.0,  "Quota": 500.0,  "Billed": 300.0,  "Listed": 50.0,  "Intercompany": 0.0,   "QuotaBalance": 150.0 },
+        { "Channel": "MC Stores",        "ForecastFPA": 400.0,  "Quota": 350.0,  "Billed": 200.0,  "Listed": 50.0,  "Intercompany": 50.0,  "QuotaBalance": 50.0  },
+        { "Channel": "Dealers",          "ForecastFPA": 500.0,  "Quota": 400.0,  "Billed": 250.0,  "Listed": 80.0,  "Intercompany": 0.0,   "QuotaBalance": 70.0  },
+        { "Channel": "Televendas",       "ForecastFPA": 200.0,  "Quota": 180.0,  "Billed": 100.0,  "Listed": 30.0,  "Intercompany": 0.0,   "QuotaBalance": 50.0  }
+      ],
+      "quota_by_customer": {
+        "CustomerID": "0000100023",
+        "CustomerGroup": "NAC-MAGALU",
+        "Material": "38MACA09M5",
+        "QuotaQty": 300.0,
+        "BilledQty": 180.0,
+        "ListedQty": 60.0,
+        "RemainingQty": 60.0,
+        "AveragePriceUSD": 320.0,
+        "AveragePriceBRL": 1760.0
+      }
+    },
+
+    "production_plan": {
+      "description": "Plano de produção com horizontes firme e planejado. Sem API SAP padrão — ingestão manual ou futura integração PP. Fonte: Planilha Caio Fratta > Chegadas Import.",
+      "example": [
+        {
+          "Material": "38MACA09M5",
+          "Plant": "1001",
+          "PlanType": "FIRM",
+          "PlannedDate": "2026-08-20",
+          "PlannedQty": 500.0,
+          "Unit": "UN",
+          "Origin": "Importação",
+          "ArrivalMonth": "2026-08"
+        },
+        {
+          "Material": "38MACA09M5",
+          "Plant": "1001",
+          "PlanType": "PLANNING",
+          "PlannedDate": "2026-09-10",
+          "PlannedQty": 800.0,
+          "Unit": "UN",
+          "Origin": "Importação",
+          "ArrivalMonth": "2026-09"
+        }
+      ]
+    },
+
+    "in_transit_imports": {
+      "description": "Importações em trânsito (ZMM067/ZMM066). Já disponível no Data Lake. Fonte: Documento de Solução SEE v1.2.",
+      "example": {
+        "Material": "38MACA09M5",
+        "Plant": "1001",
+        "PurchaseOrder": "4500099887",
+        "Vendor": "MIDEA CHINA",
+        "ShipmentDate": "2026-07-30",
+        "ExpectedArrivalDate": "2026-08-22",
+        "TransitQty": 1200.0,
+        "Unit": "UN",
+        "ShipmentStatus": "IN_TRANSIT",
+        "ContainerNumber": "MSKU1234567",
+        "PortOfOrigin": "Shanghai",
+        "PortOfDestination": "Itajaí"
+      }
+    },
+
+    "logistics_freight_table": {
+      "description": "Tabela de fretes e rotas logísticas. Dado operacional interno sem API SAP. Fonte: Planilha Deivid - REGIOES CIDADES ESTADOS.",
+      "example": {
+        "RouteID": "SP-RJ-CIF",
+        "Origin": "SP",
+        "Destination": "RJ",
+        "Carrier": "Transportadora ABC",
+        "Incoterms": "CIF",
+        "LoadType": "LOTACAO",
+        "VehicleType": "CARRETA",
+        "MaxLoadM3_12M": 72.0,
+        "MaxLoadM3_18M": 108.0,
+        "FreightRatePctNF": 2.8,
+        "MinimumFreightBRL": 1500.0,
+        "LeadTimeDays": 3,
+        "StorageGraceDays": 5,
+        "ValidFrom": "2026-01-01",
+        "ValidTo": "2026-12-31"
+      }
+    },
+
+    "semaforo_status": {
+      "description": "Lógica do semáforo de priorização — implementada no motor Databricks, não tem origem em API SAP. Fonte: CARTEIRA 07.08, VL10C.",
+      "possible_values": [
+        { "status": "VERDE",     "meaning": "Pedido apto para alocação e emissão de lista" },
+        { "status": "AMARELO",   "meaning": "Pedido com pendência (ex: bloqueio crédito, FATCOM incompleto)" },
+        { "status": "VERMELHO",  "meaning": "Pedido bloqueado — não entra no ciclo de alocação" }
+      ],
+      "example": {
+        "SalesOrder": "0000012345",
+        "SalesOrderItem": "000010",
+        "Semaforo": "VERDE",
+        "SemaforoReason": "",
+        "CreditStatus": "APROVADO",
+        "DeliveryBlock": false,
+        "BillingBlock": false,
+        "FATCOMConsistency": true,
+        "EVAPCONDConsistency": true
+      }
+    }
+  },
+
   "field_mapping": {
-    "description": "Mapeamento dos campos extraídos hoje (planilhas/transações Z) para os campos das APIs padrão",
+    "description": "Mapeamento completo dos campos extraídos hoje (planilhas/transações Z) para APIs padrão ou estruturas de configuração.",
+
     "carteira_to_sales_order": [
-      { "excel_field": "Documento SD",           "api_field": "SalesOrder",                        "entity": "A_SalesOrder" },
-      { "excel_field": "Tipo doc.vendas",         "api_field": "SalesOrderType",                    "entity": "A_SalesOrder" },
-      { "excel_field": "Organização vendas",      "api_field": "SalesOrganization",                 "entity": "A_SalesOrder" },
-      { "excel_field": "Canal distribuição",      "api_field": "DistributionChannel",               "entity": "A_SalesOrder" },
-      { "excel_field": "Escritório de vendas",    "api_field": "SalesOffice",                       "entity": "A_SalesOrder" },
-      { "excel_field": "Equipe de vendas",        "api_field": "SalesGroup",                        "entity": "A_SalesOrder" },
-      { "excel_field": "Dt.criação",              "api_field": "CreationDate",                      "entity": "A_SalesOrder" },
-      { "excel_field": "Condições pgto.",         "api_field": "PaymentTerms",                      "entity": "A_SalesOrder" },
-      { "excel_field": "Moeda do documento",      "api_field": "TransactionCurrency",               "entity": "A_SalesOrder" },
-      { "excel_field": "Incoterms",               "api_field": "IncotermsClassification",           "entity": "A_SalesOrder" },
-      { "excel_field": "Status global crédito",   "api_field": "OverallSDProcessStatus",            "entity": "A_SalesOrder" },
-      { "excel_field": "BloqDocFatmto.",          "api_field": "BillingBlockReason",                "entity": "A_SalesOrder" },
-      { "excel_field": "Cliente",                 "api_field": "SoldToParty",                       "entity": "A_SalesOrder" },
-      { "excel_field": "Material",                "api_field": "Material",                          "entity": "A_SalesOrderItem" },
-      { "excel_field": "Item (SD)",               "api_field": "SalesOrderItem",                    "entity": "A_SalesOrderItem" },
-      { "excel_field": "Quantidade pendente",     "api_field": "RequestedQuantity",                 "entity": "A_SalesOrderItem" },
-      { "excel_field": "Qtd.confirmada",          "api_field": "ConfdDelivQtyInOrderQtyUnit",       "entity": "A_SalesOrderScheduleLine" },
-      { "excel_field": "Quant. Faturada",         "api_field": "BilledQuantity",                    "entity": "A_SalesOrderItem" },
-      { "excel_field": "Bloqueio Remessa Item",   "api_field": "DeliveryBlockReasonCode",           "entity": "A_SalesOrderItem" },
-      { "excel_field": "Centro",                  "api_field": "Plant",                             "entity": "A_SalesOrderItem" },
-      { "excel_field": "Depósito",                "api_field": "StorageLocation",                   "entity": "A_SalesOrderItem" },
-      { "excel_field": "Vl. Tot. Pedido",         "api_field": "NetAmount",                         "entity": "A_SalesOrderItem" },
-      { "excel_field": "Montante do imposto",     "api_field": "TaxAmount",                         "entity": "A_SalesOrderItem" },
-      { "excel_field": "Valor do frete",          "api_field": "FreightAmount",                     "entity": "A_SalesOrderItem" },
-      { "excel_field": "Data de remessa",         "api_field": "RequestedDeliveryDate",             "entity": "A_SalesOrderItem" },
-      { "excel_field": "Unidade de Medida",       "api_field": "RequestedQuantityUnit",             "entity": "A_SalesOrderItem" }
+      { "excel_field": "Documento SD",           "api_field": "SalesOrder",                        "entity": "A_SalesOrder",             "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Tipo doc.vendas",         "api_field": "SalesOrderType",                    "entity": "A_SalesOrder",             "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Organização vendas",      "api_field": "SalesOrganization",                 "entity": "A_SalesOrder",             "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Canal distribuição",      "api_field": "DistributionChannel",               "entity": "A_SalesOrder",             "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Escritório de vendas",    "api_field": "SalesOffice",                       "entity": "A_SalesOrder",             "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Equipe de vendas",        "api_field": "SalesGroup",                        "entity": "A_SalesOrder",             "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Dt.criação",              "api_field": "CreationDate",                      "entity": "A_SalesOrder",             "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Condições pgto.",         "api_field": "PaymentTerms",                      "entity": "A_SalesOrder",             "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Moeda do documento",      "api_field": "TransactionCurrency",               "entity": "A_SalesOrder",             "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Incoterms",               "api_field": "IncotermsClassification",           "entity": "A_SalesOrder",             "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Status global crédito",   "api_field": "OverallSDProcessStatus",            "entity": "A_SalesOrder",             "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "BloqDocFatmto.",          "api_field": "BillingBlockReason",                "entity": "A_SalesOrder",             "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Cliente",                 "api_field": "SoldToParty",                       "entity": "A_SalesOrder",             "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Material",                "api_field": "Material",                          "entity": "A_SalesOrderItem",         "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Item (SD)",               "api_field": "SalesOrderItem",                    "entity": "A_SalesOrderItem",         "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Quantidade pendente",     "api_field": "RequestedQuantity",                 "entity": "A_SalesOrderItem",         "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Qtd.confirmada",          "api_field": "ConfdDelivQtyInOrderQtyUnit",       "entity": "A_SalesOrderScheduleLine", "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Quant. Faturada",         "api_field": "BilledQuantity",                    "entity": "A_SalesOrderItem",         "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Bloqueio Remessa Item",   "api_field": "DeliveryBlockReasonCode",           "entity": "A_SalesOrderItem",         "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Centro",                  "api_field": "Plant",                             "entity": "A_SalesOrderItem",         "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Depósito",                "api_field": "StorageLocation",                   "entity": "A_SalesOrderItem",         "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Vl. Tot. Pedido",         "api_field": "NetAmount",                         "entity": "A_SalesOrderItem",         "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Montante do imposto",     "api_field": "TaxAmount",                         "entity": "A_SalesOrderItem",         "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Valor do frete",          "api_field": "FreightAmount",                     "entity": "A_SalesOrderItem",         "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Data de remessa",         "api_field": "RequestedDeliveryDate",             "entity": "A_SalesOrderItem",         "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Unidade de Medida",       "api_field": "RequestedQuantityUnit",             "entity": "A_SalesOrderItem",         "api": "API_SALES_ORDER_SRV" },
+      { "excel_field": "Setor de atividade",      "api_field": "BusinessArea",                      "entity": "A_SalesOrderItem",         "api": "API_SALES_ORDER_SRV" }
     ],
+
     "remessa_to_outbound_delivery": [
-      { "excel_field": "Data criação remessa",    "api_field": "CreationDate",                      "entity": "A_OutbDeliveryHeader" },
-      { "excel_field": "Data de remessa",         "api_field": "PlannedGoodsIssueDate",             "entity": "A_OutbDeliveryHeader" },
-      { "excel_field": "Dt.desejada remessa",     "api_field": "DeliveryDate",                      "entity": "A_OutbDeliveryHeader" },
-      { "excel_field": "Canal distribuição",      "api_field": "DistributionChannel",               "entity": "A_OutbDeliveryHeader" },
-      { "excel_field": "Organização vendas",      "api_field": "SalesOrganization",                 "entity": "A_OutbDeliveryHeader" },
-      { "excel_field": "Incoterms",               "api_field": "IncotermsClassification",           "entity": "A_OutbDeliveryHeader" },
-      { "excel_field": "Bloqueio remessa",        "api_field": "DeliveryBlockReason",               "entity": "A_OutbDeliveryHeader" },
-      { "excel_field": "Emissor da ordem",        "api_field": "SoldToParty",                       "entity": "A_OutbDeliveryHeader" },
-      { "excel_field": "Material",                "api_field": "Material",                          "entity": "A_OutbDeliveryItem" },
-      { "excel_field": "Quantidade pendente",     "api_field": "ActualDeliveryQuantity",            "entity": "A_OutbDeliveryItem" },
-      { "excel_field": "Centro",                  "api_field": "Plant",                             "entity": "A_OutbDeliveryItem" },
-      { "excel_field": "Depósito",                "api_field": "StorageLocation",                   "entity": "A_OutbDeliveryItem" },
-      { "excel_field": "Peso bruto",              "api_field": "GrossWeight",                       "entity": "A_OutbDeliveryItem" },
-      { "excel_field": "Peso líquido",            "api_field": "NetWeight",                         "entity": "A_OutbDeliveryItem" },
-      { "excel_field": "Documento SD",            "api_field": "ReferenceSDDocument",               "entity": "A_OutbDeliveryItem" }
+      { "excel_field": "Data criação remessa",    "api_field": "CreationDate",                      "entity": "A_OutbDeliveryHeader",     "api": "API_OUTBOUND_DELIVERY_SRV" },
+      { "excel_field": "Data de remessa",         "api_field": "PlannedGoodsIssueDate",             "entity": "A_OutbDeliveryHeader",     "api": "API_OUTBOUND_DELIVERY_SRV" },
+      { "excel_field": "Dt.desejada remessa",     "api_field": "DeliveryDate",                      "entity": "A_OutbDeliveryHeader",     "api": "API_OUTBOUND_DELIVERY_SRV" },
+      { "excel_field": "Canal distribuição",      "api_field": "DistributionChannel",               "entity": "A_OutbDeliveryHeader",     "api": "API_OUTBOUND_DELIVERY_SRV" },
+      { "excel_field": "Organização vendas",      "api_field": "SalesOrganization",                 "entity": "A_OutbDeliveryHeader",     "api": "API_OUTBOUND_DELIVERY_SRV" },
+      { "excel_field": "Incoterms",               "api_field": "IncotermsClassification",           "entity": "A_OutbDeliveryHeader",     "api": "API_OUTBOUND_DELIVERY_SRV" },
+      { "excel_field": "Bloqueio remessa",        "api_field": "DeliveryBlockReason",               "entity": "A_OutbDeliveryHeader",     "api": "API_OUTBOUND_DELIVERY_SRV" },
+      { "excel_field": "Emissor da ordem",        "api_field": "SoldToParty",                       "entity": "A_OutbDeliveryHeader",     "api": "API_OUTBOUND_DELIVERY_SRV" },
+      { "excel_field": "Material",                "api_field": "Material",                          "entity": "A_OutbDeliveryItem",       "api": "API_OUTBOUND_DELIVERY_SRV" },
+      { "excel_field": "Quantidade pendente",     "api_field": "ActualDeliveryQuantity",            "entity": "A_OutbDeliveryItem",       "api": "API_OUTBOUND_DELIVERY_SRV" },
+      { "excel_field": "Utilização livre",        "api_field": "FreeUseQty",                        "entity": "ZREMESSA_snapshot",        "api": "DATA_LAKE" },
+      { "excel_field": "Centro",                  "api_field": "Plant",                             "entity": "A_OutbDeliveryItem",       "api": "API_OUTBOUND_DELIVERY_SRV" },
+      { "excel_field": "Depósito",                "api_field": "StorageLocation",                   "entity": "A_OutbDeliveryItem",       "api": "API_OUTBOUND_DELIVERY_SRV" },
+      { "excel_field": "Peso bruto",              "api_field": "GrossWeight",                       "entity": "A_OutbDeliveryItem",       "api": "API_OUTBOUND_DELIVERY_SRV" },
+      { "excel_field": "Peso líquido",            "api_field": "NetWeight",                         "entity": "A_OutbDeliveryItem",       "api": "API_OUTBOUND_DELIVERY_SRV" },
+      { "excel_field": "Documento SD",            "api_field": "ReferenceSDDocument",               "entity": "A_OutbDeliveryItem",       "api": "API_OUTBOUND_DELIVERY_SRV" }
     ],
-    "unmapped_fields": [
-      { "excel_field": "FATCOM",          "status": "Campo Z customizado - sem equivalente padrão, requer extensão SD ou tabela Z" },
-      { "excel_field": "Semáforo",        "status": "Lógica de negócio - implementar no motor Databricks" },
-      { "excel_field": "Cotas",           "status": "Sem API padrão - manter em Supabase/tabela de configuração" },
-      { "excel_field": "Plano Produção",  "status": "Sem API padrão - ingestão manual ou integração PP futura" },
-      { "excel_field": "Nível explosão",  "status": "Coberto por API_BILL_OF_MATERIAL_SRV - adicionar ao escopo" }
+
+    "billing_to_api": [
+      { "excel_field": "Doc.fat.",                "api_field": "BillingDocument",                   "entity": "A_BillingDocument",        "api": "API_BILLING_SRV" },
+      { "excel_field": "TipFt",                   "api_field": "BillingDocumentType",               "entity": "A_BillingDocument",        "api": "API_BILLING_SRV" },
+      { "excel_field": "Data do faturamento",     "api_field": "BillingDocumentDate",               "entity": "A_BillingDocument",        "api": "API_BILLING_SRV" },
+      { "excel_field": "Qtd.faturada",            "api_field": "BilledQuantity",                    "entity": "A_BillingDocument",        "api": "API_BILLING_SRV" },
+      { "excel_field": "Doc.venda",               "api_field": "SalesDocument",                     "entity": "A_BillingDocument",        "api": "API_BILLING_SRV" },
+      { "excel_field": "Val.líq.",                "api_field": "NetAmount",                         "entity": "A_BillingDocument",        "api": "API_BILLING_SRV" },
+      { "excel_field": "Nº fatura",               "api_field": "InvoiceNumber",                     "entity": "A_BillingDocument",        "api": "API_BILLING_SRV" },
+      { "excel_field": "Montante do imposto",     "api_field": "TaxAmount",                         "entity": "A_BillingDocument",        "api": "API_BILLING_SRV" },
+      { "excel_field": "Rg",                      "api_field": "Region",                            "entity": "A_BillingDocument",        "api": "API_BILLING_SRV" }
+    ],
+
+    "non_sap_fields": [
+      { "excel_field": "FATCOM",                  "status": "Campo Z customizado — requer extensão SD ou tabela Z. Crítico para linking EVAP/COND/GRELHA.",  "destination": "Tabela Z SAP ou campo de usuário VBAK" },
+      { "excel_field": "Semáforo",                "status": "Lógica de negócio calculada no motor Databricks.",                                               "destination": "Databricks / Data Lake Gold" },
+      { "excel_field": "Cotas",                   "status": "Sem API SAP padrão.",                                                                            "destination": "Supabase — tabela quota_management" },
+      { "excel_field": "Plano de Produção",       "status": "Sem API SAP padrão.",                                                                            "destination": "Supabase — tabela production_plan / ingestão manual" },
+      { "excel_field": "Nível explosão / BOM",    "status": "Coberto por API_BILL_OF_MATERIAL_SRV — avaliar inclusão no escopo.",                             "destination": "API_BILL_OF_MATERIAL_SRV ou Data Lake Bronze" },
+      { "excel_field": "Rotas / Fretes",          "status": "Tabela operacional interna.",                                                                    "destination": "Supabase — tabela logistics_freight_table" },
+      { "excel_field": "Dimensões produto",       "status": "Atributo de material — disponível em API_PRODUCT_SRV mas precisa estar correto no SAP.",         "destination": "API_PRODUCT_SRV (Material Master)" },
+      { "excel_field": "Cidade / UF cliente",     "status": "Disponível via Customer Master API (A_Customer).",                                               "destination": "API_BUSINESS_PARTNER_SRV" },
+      { "excel_field": "Rede / Hierarquia client","status": "Dado customizado de segmentação comercial.",                                                     "destination": "Supabase — tabela customer_master" },
+      { "excel_field": "Status IQC",              "status": "Controle de qualidade de entrada — fora do escopo SEE v1.",                                      "destination": "Fora do escopo imediato" },
+      { "excel_field": "Preço médio USD/BRL",     "status": "Calculado a partir de faturamento histórico.",                                                   "destination": "Data Lake Gold — calculado pelo Databricks" }
     ]
   }
 }
