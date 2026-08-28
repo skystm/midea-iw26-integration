@@ -1,0 +1,8 @@
+# Arquivos temporários Office
+~$*.xlsx
+~$*.xlsm
+~$*.pptx
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db

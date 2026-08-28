@@ -1,0 +1,266 @@
+{
+  "metadata": {
+    "project": "Midea Carrier - Sales Execution Engine (SEE)",
+    "s4hana_version": "S/4HANA On-Premise 2023 FPS03",
+    "generated_at": "2026-08-28",
+    "purpose": "Mock data for application development - field mapping from current SAP extractions to standard OData APIs"
+  },
+
+  "API_SALES_ORDER_SRV": {
+    "description": "Sales Order API - substitui extração manual da Carteira (pedidos de venda)",
+    "entity_SalesOrder": {
+      "SalesOrder": "0000012345",
+      "SalesOrderType": "ZOR",
+      "SalesOrganization": "1000",
+      "DistributionChannel": "10",
+      "OrganizationDivision": "00",
+      "SalesOffice": "SP01",
+      "SalesGroup": "G01",
+      "SoldToParty": "0000100023",
+      "CreationDate": "2026-08-07",
+      "TransactionCurrency": "BRL",
+      "PaymentTerms": "Z030",
+      "IncotermsClassification": "CIF",
+      "IncotermsLocation1": "São Paulo",
+      "BillingBlockReason": "",
+      "OverallSDProcessStatus": "B",
+      "OverallDeliveryStatus": "A",
+      "TotalNetAmount": 158400.00
+    },
+    "entity_SalesOrderItem": {
+      "SalesOrder": "0000012345",
+      "SalesOrderItem": "000010",
+      "Material": "38MACA09M5",
+      "MaterialDescription": "AR COND SPLIT HW LITE INVERTER 9000BTU",
+      "Plant": "1001",
+      "StorageLocation": "0001",
+      "RequestedQuantity": 120.0,
+      "RequestedQuantityUnit": "UN",
+      "ConfdDelivQtyInOrderQtyUnit": 80.0,
+      "DeliveredQtyInOrderQtyUnit": 0.0,
+      "BilledQuantity": 0.0,
+      "RequestedDeliveryDate": "2026-08-15",
+      "DeliveryBlockReasonCode": "",
+      "NetAmount": 96000.00,
+      "TaxAmount": 19200.00,
+      "FreightAmount": 2880.00,
+      "Incoterms": "CIF",
+      "SalesDocumentRjcnReason": ""
+    },
+    "entity_SalesOrderScheduleLine": {
+      "SalesOrder": "0000012345",
+      "SalesOrderItem": "000010",
+      "ScheduleLine": "0001",
+      "RequestedDeliveryDate": "2026-08-15",
+      "ConfirmedDeliveryDate": "2026-08-15",
+      "ScheduleLineOrderQuantity": 120.0,
+      "ConfdOrderQtyByMatlAvailCheck": 80.0,
+      "DeliveredQuantityInBaseUnit": 0.0
+    }
+  },
+
+  "API_OUTBOUND_DELIVERY_SRV": {
+    "description": "Outbound Delivery API - substitui extração manual de remessas (ZREMESSA / VL03N)",
+    "entity_OutbDeliveryHeader": {
+      "DeliveryDocument": "0080123456",
+      "DeliveryDocumentType": "LF",
+      "ShippingPoint": "SP01",
+      "SalesOrganization": "1000",
+      "DistributionChannel": "10",
+      "OrganizationDivision": "00",
+      "SoldToParty": "0000100023",
+      "ShipToParty": "0000100023",
+      "CreationDate": "2026-08-07",
+      "PlannedGoodsIssueDate": "2026-08-15",
+      "ActualGoodsMovementDate": null,
+      "DeliveryDate": "2026-08-15",
+      "IncotermsClassification": "CIF",
+      "IncotermsLocation1": "São Paulo",
+      "DeliveryBlockReason": "",
+      "OverallDeliveryStatusDesc": "Not yet processed",
+      "OverallSDProcessStatus": "A",
+      "TotalGrossWeight": 1250.0,
+      "TotalNetWeight": 1100.0,
+      "WeightUnit": "KG",
+      "TotalVolume": 18.5,
+      "VolumeUnit": "M3"
+    },
+    "entity_OutbDeliveryItem": {
+      "DeliveryDocument": "0080123456",
+      "DeliveryDocumentItem": "000010",
+      "Material": "38MACA09M5",
+      "MaterialDescription": "AR COND SPLIT HW LITE INVERTER 9000BTU",
+      "Plant": "1001",
+      "StorageLocation": "0001",
+      "ActualDeliveryQuantity": 80.0,
+      "DeliveryQuantityUnit": "UN",
+      "QuantityInBaseUnit": 80.0,
+      "BaseUnit": "UN",
+      "GrossWeight": 1250.0,
+      "NetWeight": 1100.0,
+      "WeightUnit": "KG",
+      "Volume": 18.5,
+      "VolumeUnit": "M3",
+      "ReferenceSDDocument": "0000012345",
+      "ReferenceSDDocumentItem": "000010",
+      "Batch": "",
+      "IsCompletelyDelivered": false
+    },
+    "entity_OutbDeliveryPartner": {
+      "DeliveryDocument": "0080123456",
+      "PartnerFunction": "WE",
+      "Customer": "0000100023",
+      "ContactPersonFirstName": "",
+      "ContactPersonLastName": "",
+      "AddressID": "0000123456"
+    }
+  },
+
+  "BAPI_OUTB_DELIVERY_CREATE_SLS": {
+    "description": "BAPI para criação de remessa a partir de pedido de venda - base do RFC ABAP custom a ser construído",
+    "input": {
+      "SHIP_POINT": "SP01",
+      "DU_DATE": "2026-08-15",
+      "DELIVERY": {
+        "SALES_ORG": "1000",
+        "DISTR_CHAN": "10",
+        "DIVISION": "00"
+      },
+      "CREATEDFROM_SALESORDER": {
+        "DOCUMENT": "0000012345",
+        "DOC_ITEM": "000010",
+        "DLV_QTY": 80.0,
+        "SALES_UNIT": "UN"
+      }
+    },
+    "output": {
+      "DELIVERY": "0080123456",
+      "RETURN": [
+        {
+          "TYPE": "S",
+          "MESSAGE": "Delivery 0080123456 has been saved"
+        }
+      ]
+    }
+  },
+
+  "BAPI_MATERIAL_AVAILABILITY": {
+    "description": "ATP clássico - verificação de disponibilidade de material (Default Release)",
+    "input": {
+      "PLANT": "1001",
+      "MATERIAL": "38MACA09M5",
+      "UNIT": "UN",
+      "STGE_LOC": "0001",
+      "REQ_DATE": "2026-08-15",
+      "REQ_QTY": 120.0,
+      "CHECK_RULE": "A"
+    },
+    "output": {
+      "COMMIT_QTY": 80.0,
+      "COMMIT_DATE": "2026-08-15",
+      "REC_INSP_QTY": 0.0,
+      "RETURN": [
+        {
+          "TYPE": "S",
+          "MESSAGE": "Availability check completed"
+        }
+      ]
+    }
+  },
+
+  "OP_APIAVAILTOPROMISECHECK_0001": {
+    "description": "Advanced ATP (AATP) - verificação avançada de disponibilidade, suporta backorder e alternativas",
+    "request": {
+      "ATPCheckRequest": {
+        "ATPCheckRequestItem": [
+          {
+            "ItemNumber": "000010",
+            "Material": "38MACA09M5",
+            "Plant": "1001",
+            "StorageLocation": "0001",
+            "RequestedQuantity": 120.0,
+            "RequestedQuantityUnit": "UN",
+            "RequestedDate": "2026-08-15",
+            "SalesOrder": "0000012345",
+            "SalesOrderItem": "000010",
+            "CheckingRule": "A",
+            "BusinessTransactionType": "A"
+          }
+        ]
+      }
+    },
+    "response": {
+      "ATPCheckResult": {
+        "ATPCheckResultItem": [
+          {
+            "ItemNumber": "000010",
+            "Material": "38MACA09M5",
+            "Plant": "1001",
+            "ConfirmedQuantity": 80.0,
+            "ConfirmedQuantityUnit": "UN",
+            "ConfirmedDate": "2026-08-15",
+            "RemainingQuantity": 40.0,
+            "NextAvailableDate": "2026-08-22",
+            "ATPCheckStatus": "PARTIAL"
+          }
+        ]
+      }
+    }
+  },
+
+  "field_mapping": {
+    "description": "Mapeamento dos campos extraídos hoje (planilhas/transações Z) para os campos das APIs padrão",
+    "carteira_to_sales_order": [
+      { "excel_field": "Documento SD",           "api_field": "SalesOrder",                        "entity": "A_SalesOrder" },
+      { "excel_field": "Tipo doc.vendas",         "api_field": "SalesOrderType",                    "entity": "A_SalesOrder" },
+      { "excel_field": "Organização vendas",      "api_field": "SalesOrganization",                 "entity": "A_SalesOrder" },
+      { "excel_field": "Canal distribuição",      "api_field": "DistributionChannel",               "entity": "A_SalesOrder" },
+      { "excel_field": "Escritório de vendas",    "api_field": "SalesOffice",                       "entity": "A_SalesOrder" },
+      { "excel_field": "Equipe de vendas",        "api_field": "SalesGroup",                        "entity": "A_SalesOrder" },
+      { "excel_field": "Dt.criação",              "api_field": "CreationDate",                      "entity": "A_SalesOrder" },
+      { "excel_field": "Condições pgto.",         "api_field": "PaymentTerms",                      "entity": "A_SalesOrder" },
+      { "excel_field": "Moeda do documento",      "api_field": "TransactionCurrency",               "entity": "A_SalesOrder" },
+      { "excel_field": "Incoterms",               "api_field": "IncotermsClassification",           "entity": "A_SalesOrder" },
+      { "excel_field": "Status global crédito",   "api_field": "OverallSDProcessStatus",            "entity": "A_SalesOrder" },
+      { "excel_field": "BloqDocFatmto.",          "api_field": "BillingBlockReason",                "entity": "A_SalesOrder" },
+      { "excel_field": "Cliente",                 "api_field": "SoldToParty",                       "entity": "A_SalesOrder" },
+      { "excel_field": "Material",                "api_field": "Material",                          "entity": "A_SalesOrderItem" },
+      { "excel_field": "Item (SD)",               "api_field": "SalesOrderItem",                    "entity": "A_SalesOrderItem" },
+      { "excel_field": "Quantidade pendente",     "api_field": "RequestedQuantity",                 "entity": "A_SalesOrderItem" },
+      { "excel_field": "Qtd.confirmada",          "api_field": "ConfdDelivQtyInOrderQtyUnit",       "entity": "A_SalesOrderScheduleLine" },
+      { "excel_field": "Quant. Faturada",         "api_field": "BilledQuantity",                    "entity": "A_SalesOrderItem" },
+      { "excel_field": "Bloqueio Remessa Item",   "api_field": "DeliveryBlockReasonCode",           "entity": "A_SalesOrderItem" },
+      { "excel_field": "Centro",                  "api_field": "Plant",                             "entity": "A_SalesOrderItem" },
+      { "excel_field": "Depósito",                "api_field": "StorageLocation",                   "entity": "A_SalesOrderItem" },
+      { "excel_field": "Vl. Tot. Pedido",         "api_field": "NetAmount",                         "entity": "A_SalesOrderItem" },
+      { "excel_field": "Montante do imposto",     "api_field": "TaxAmount",                         "entity": "A_SalesOrderItem" },
+      { "excel_field": "Valor do frete",          "api_field": "FreightAmount",                     "entity": "A_SalesOrderItem" },
+      { "excel_field": "Data de remessa",         "api_field": "RequestedDeliveryDate",             "entity": "A_SalesOrderItem" },
+      { "excel_field": "Unidade de Medida",       "api_field": "RequestedQuantityUnit",             "entity": "A_SalesOrderItem" }
+    ],
+    "remessa_to_outbound_delivery": [
+      { "excel_field": "Data criação remessa",    "api_field": "CreationDate",                      "entity": "A_OutbDeliveryHeader" },
+      { "excel_field": "Data de remessa",         "api_field": "PlannedGoodsIssueDate",             "entity": "A_OutbDeliveryHeader" },
+      { "excel_field": "Dt.desejada remessa",     "api_field": "DeliveryDate",                      "entity": "A_OutbDeliveryHeader" },
+      { "excel_field": "Canal distribuição",      "api_field": "DistributionChannel",               "entity": "A_OutbDeliveryHeader" },
+      { "excel_field": "Organização vendas",      "api_field": "SalesOrganization",                 "entity": "A_OutbDeliveryHeader" },
+      { "excel_field": "Incoterms",               "api_field": "IncotermsClassification",           "entity": "A_OutbDeliveryHeader" },
+      { "excel_field": "Bloqueio remessa",        "api_field": "DeliveryBlockReason",               "entity": "A_OutbDeliveryHeader" },
+      { "excel_field": "Emissor da ordem",        "api_field": "SoldToParty",                       "entity": "A_OutbDeliveryHeader" },
+      { "excel_field": "Material",                "api_field": "Material",                          "entity": "A_OutbDeliveryItem" },
+      { "excel_field": "Quantidade pendente",     "api_field": "ActualDeliveryQuantity",            "entity": "A_OutbDeliveryItem" },
+      { "excel_field": "Centro",                  "api_field": "Plant",                             "entity": "A_OutbDeliveryItem" },
+      { "excel_field": "Depósito",                "api_field": "StorageLocation",                   "entity": "A_OutbDeliveryItem" },
+      { "excel_field": "Peso bruto",              "api_field": "GrossWeight",                       "entity": "A_OutbDeliveryItem" },
+      { "excel_field": "Peso líquido",            "api_field": "NetWeight",                         "entity": "A_OutbDeliveryItem" },
+      { "excel_field": "Documento SD",            "api_field": "ReferenceSDDocument",               "entity": "A_OutbDeliveryItem" }
+    ],
+    "unmapped_fields": [
+      { "excel_field": "FATCOM",          "status": "Campo Z customizado - sem equivalente padrão, requer extensão SD ou tabela Z" },
+      { "excel_field": "Semáforo",        "status": "Lógica de negócio - implementar no motor Databricks" },
+      { "excel_field": "Cotas",           "status": "Sem API padrão - manter em Supabase/tabela de configuração" },
+      { "excel_field": "Plano Produção",  "status": "Sem API padrão - ingestão manual ou integração PP futura" },
+      { "excel_field": "Nível explosão",  "status": "Coberto por API_BILL_OF_MATERIAL_SRV - adicionar ao escopo" }
+    ]
+  }
+}
